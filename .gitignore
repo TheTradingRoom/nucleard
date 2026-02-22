@@ -1,0 +1,33 @@
+# Rojo build outputs
+/*.rbxl
+/*.rbxlx
+/*.rbxm
+/*.rbxmx
+
+# Rojo sourcemap
+/sourcemap.json
+
+# Studio lock files
+*.rbxl.lock
+*.rbxlx.lock
+
+# Wally packages (regenerated on install)
+/Packages/
+/ServerPackages/
+/DevPackages/
+/wally.lock
+
+# Toolchain
+/.aftman/
+/.rokit/
+
+# Editor
+.vscode/settings.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Secrets
+*.env
+credentials.*

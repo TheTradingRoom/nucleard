@@ -1,0 +1,33 @@
+{
+  "className": "Folder",
+  "children": [
+    {
+      "name": "BuildRequest",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "MoveUnits",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "TrainUnit",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "AdvanceAge",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "LaunchNuclear",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "GameState",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "ResourceUpdate",
+      "className": "RemoteEvent"
+    }
+  ]
+}
