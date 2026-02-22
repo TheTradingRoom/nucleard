@@ -3,8 +3,7 @@
 
 print("[Nuclear'd] Server starting...")
 
--- Services will be required and initialized here as they are built
--- local ResourceSystem = require(script.Services.ResourceSystem)
--- local BuildingSystem = require(script.Services.BuildingSystem)
+local GameManager = require(script.Services.GameManager)
+GameManager.Init()
 
 print("[Nuclear'd] Server ready.")

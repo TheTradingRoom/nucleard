@@ -28,6 +28,62 @@
     {
       "name": "ResourceUpdate",
       "className": "RemoteEvent"
+    },
+    {
+      "name": "PlotAssigned",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "WaveWarning",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "NuclearStatus",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "GameOver",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "SelectBuilding",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "BuildingDestroyed",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "UnitSpawned",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "UnitDied",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "EnemySpawned",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "EnemyDied",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "DamageNumber",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "AgeAdvanced",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "WaveCleared",
+      "className": "RemoteEvent"
+    },
+    {
+      "name": "SellBuilding",
+      "className": "RemoteEvent"
     }
   ]
 }
