@@ -20,6 +20,7 @@
 # Toolchain
 /.aftman/
 /.rokit/
+/tools/
 
 # Editor
 .vscode/settings.json

@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 
 # Fetch credentials from Hive store
 $apiKey = (Invoke-RestMethod -Uri "http://100.93.55.100:8743/credentials/get/spin0580/ROBLOX_API_KEY").value
-$universeId = (Invoke-RestMethod -Uri "http://100.93.55.100:8743/credentials/get/spin0580/ROBLOX_UNIVERSE_ID").value
+$universeId = (Invoke-RestMethod -Uri "http://100.93.55.100:8743/credentials/get/nucleard/ROBLOX_UNIVERSE_ID").value
 $placeId = (Invoke-RestMethod -Uri "http://100.93.55.100:8743/credentials/get/nucleard/ROBLOX_PLACE_ID").value
 
 if (-not $apiKey -or -not $universeId -or -not $placeId) {
@@ -18,7 +18,7 @@ $buildFile = Join-Path $PSScriptRoot "..\game.rbxl"
 # Build with Rojo
 Write-Host "Building with Rojo..." -ForegroundColor Cyan
 Push-Location (Join-Path $PSScriptRoot "..")
-rojo build -o game.rbxl
+& (Join-Path $PSScriptRoot "..\tools\rojo.exe") build -o game.rbxl
 Pop-Location
 
 if (-not (Test-Path $buildFile)) {

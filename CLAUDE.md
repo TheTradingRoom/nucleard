@@ -5,7 +5,8 @@
 **Nuclear'd: The Battle for Clear Skin** — a comedic RTS game on Roblox where players are zits battling for dominance on The Great Face. Modern military RTS mechanics reskinned with spot/pimple humor.
 
 - **Roblox Account:** Spin0580
-- **Credentials:** Hive credential store (`spin0580` scope for API key + universe ID)
+- **Universe ID:** 9781725112 | **Place ID:** 103298120658362
+- **Credentials:** Hive credential store (`spin0580` for API key, `nucleard` for universe/place IDs)
 - **Game Design Doc:** NAS at `/mnt/user/ClaudeHive/projects/Roblox/games/nucleard/game-design.md`
 - **Full Rojo/Security Reference:** NAS at `/mnt/user/ClaudeHive/projects/Roblox/docs/05_rojo_pipeline_guide.md`
 
@@ -77,10 +78,10 @@ powershell -ExecutionPolicy Bypass -File scripts/publish.ps1
 ## Credential Retrieval
 
 ```bash
-# API Key
+# API Key (account-level)
 curl -s http://100.93.55.100:8743/credentials/get/spin0580/ROBLOX_API_KEY
-# Universe ID
-curl -s http://100.93.55.100:8743/credentials/get/spin0580/ROBLOX_UNIVERSE_ID
-# Place ID (once created for Nuclear'd)
+# Universe ID (game-level)
+curl -s http://100.93.55.100:8743/credentials/get/nucleard/ROBLOX_UNIVERSE_ID
+# Place ID (game-level)
 curl -s http://100.93.55.100:8743/credentials/get/nucleard/ROBLOX_PLACE_ID
 ```
