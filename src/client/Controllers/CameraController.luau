@@ -6,30 +6,27 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Constants = require(ReplicatedStorage.Constants)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local CameraController = {}
 
 -- State
-local camera = workspace.CurrentCamera
 local plotOrigin = nil
 local plotSize = nil
 local currentZoom = Constants.CAMERA_DEFAULT_ZOOM
-local cameraTarget = Vector3.new(0, 0, 0)
+local cameraTarget = Vector3.new(32, 0, 32) -- default center
 local keysDown = {}
 
 function CameraController.Init()
 	-- Wait for plot assignment
-	Remotes.PlotAssigned.OnClientEvent:Connect(function(origin, size)
+	Remotes:WaitForChild("PlotAssigned").OnClientEvent:Connect(function(origin, size)
 		plotOrigin = origin
 		plotSize = size
-		-- Center camera on plot
 		cameraTarget = Vector3.new(
 			origin.X + size / 2,
 			0,
 			origin.Z + size / 2
 		)
-		CameraController.ApplyCamera()
 	end)
 
 	-- Input handling
@@ -62,21 +59,21 @@ function CameraController.Init()
 		end
 	end)
 
-	-- Update loop
+	-- Update loop — force camera every single frame
 	RunService.RenderStepped:Connect(function(dt)
 		CameraController.Update(dt)
 	end)
-
-	-- Set camera type
-	camera.CameraType = Enum.CameraType.Scriptable
 
 	print("[CameraController] Initialized")
 end
 
 function CameraController.Update(dt: number)
-	if not plotOrigin then
-		return
+	-- Force camera to scriptable EVERY frame (Roblox tries to reset it)
+	local camera = workspace.CurrentCamera
+	if camera.CameraType ~= Enum.CameraType.Scriptable then
+		camera.CameraType = Enum.CameraType.Scriptable
 	end
+	camera.CameraSubject = nil
 
 	-- WASD panning
 	local moveDir = Vector3.new(0, 0, 0)
@@ -99,27 +96,25 @@ function CameraController.Update(dt: number)
 	end
 
 	-- Clamp camera to plot bounds (with some margin)
-	local margin = 10
-	cameraTarget = Vector3.new(
-		math.clamp(cameraTarget.X, plotOrigin.X - margin, plotOrigin.X + plotSize + margin),
-		0,
-		math.clamp(cameraTarget.Z, plotOrigin.Z - margin, plotOrigin.Z + plotSize + margin)
-	)
+	if plotOrigin and plotSize then
+		local margin = 10
+		cameraTarget = Vector3.new(
+			math.clamp(cameraTarget.X, plotOrigin.X - margin, plotOrigin.X + plotSize + margin),
+			0,
+			math.clamp(cameraTarget.Z, plotOrigin.Z - margin, plotOrigin.Z + plotSize + margin)
+		)
+	end
 
-	CameraController.ApplyCamera()
-end
-
-function CameraController.ApplyCamera()
-	-- Top-down with slight angle for depth perception
+	-- Apply top-down with slight angle for depth perception
 	local cameraPos = cameraTarget + Vector3.new(0, currentZoom, currentZoom * 0.3)
 	camera.CFrame = CFrame.lookAt(cameraPos, cameraTarget)
 end
 
 -- Get the world position the mouse is pointing at on the plot plane (Y=0.5)
 function CameraController.GetMouseWorldPosition(): Vector3?
+	local camera = workspace.CurrentCamera
 	local mouse = Players.LocalPlayer:GetMouse()
 	local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)
-	-- Intersect with Y = 0.5 plane (top of baseplate)
 	local planeY = 0.5
 	if ray.Direction.Y == 0 then
 		return nil

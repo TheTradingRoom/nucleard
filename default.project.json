@@ -16,8 +16,21 @@
       "$properties": {
         "Gravity": 196.2
       },
-      "Baseplate": {
+      "SpawnPoint": {
         "$className": "SpawnLocation",
+        "$properties": {
+          "Size": [6, 1, 6],
+          "Position": [32, -10, 32],
+          "Anchored": true,
+          "Transparency": 1,
+          "CanCollide": false,
+          "Enabled": true,
+          "Neutral": true,
+          "Duration": 0
+        }
+      },
+      "Floor": {
+        "$className": "Part",
         "$properties": {
           "Size": [512, 1, 512],
           "Position": [0, -0.5, 0],
@@ -26,11 +39,8 @@
           "Material": "SmoothPlastic",
           "TopSurface": "Smooth",
           "BottomSurface": "Smooth",
-          "Transparency": 0,
-          "CanCollide": true,
-          "Enabled": true,
-          "Neutral": true,
-          "Duration": 0
+          "Transparency": 1,
+          "CanCollide": true
         }
       }
     },

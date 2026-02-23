@@ -5,9 +5,9 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
-local Buildings = require(ReplicatedStorage.GameConfig.Buildings)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
+local Buildings = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Buildings"))
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local CameraController = require(script.Parent.CameraController)
 

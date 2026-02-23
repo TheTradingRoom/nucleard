@@ -3,10 +3,10 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
-local Buildings = require(ReplicatedStorage.GameConfig.Buildings)
-local Units = require(ReplicatedStorage.GameConfig.Units)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
+local Buildings = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Buildings"))
+local Units = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Units"))
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local UIController = {}
 
@@ -150,16 +150,29 @@ function UIController.Init(inputController)
 end
 
 function UIController.BuildResourceBar()
+	-- Age label — separate, above the resource bar
+	ageLabel = makeLabel(screenGui, {
+		text = "AGE 1: Mild Irritation",
+		size = UDim2.new(0, 300, 0, 24),
+		position = UDim2.new(0.5, 0, 0, 6),
+		textSize = 16,
+		font = Enum.Font.GothamBold,
+		color = Constants.UI_COLORS.Age1,
+		align = Enum.TextXAlignment.Center,
+	})
+	ageLabel.Name = "AgeLabel"
+	ageLabel.AnchorPoint = Vector2.new(0.5, 0)
+
+	-- Resource bar
 	local bar = makeFrame(screenGui, {
-		size = UDim2.new(0, 600, 0, 50),
-		position = UDim2.new(0.5, 0, 0, 10),
+		size = UDim2.new(0, 500, 0, 44),
+		position = UDim2.new(0.5, 0, 0, 32),
 		anchor = Vector2.new(0.5, 0),
 		color = Constants.UI_COLORS.Background,
 		cornerRadius = 8,
 	})
 	bar.Name = "ResourceBar"
 
-	-- Add padding
 	local padding = Instance.new("UIPadding")
 	padding.PaddingLeft = UDim.new(0, 10)
 	padding.PaddingRight = UDim.new(0, 10)
@@ -169,26 +182,15 @@ function UIController.BuildResourceBar()
 	layout.FillDirection = Enum.FillDirection.Horizontal
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.Padding = UDim.new(0, 15)
+	layout.Padding = UDim.new(0, 12)
 	layout.Parent = bar
-
-	-- Age display
-	ageLabel = makeLabel(bar, {
-		text = "AGE 1: Mild Irritation",
-		size = UDim2.new(0, 150, 0, 40),
-		textSize = 12,
-		font = Enum.Font.GothamBold,
-		color = Constants.UI_COLORS.Age1,
-		align = Enum.TextXAlignment.Center,
-	})
-	ageLabel.Name = "AgeLabel"
 
 	-- Resource displays
 	local resourceOrder = { "Sebum", "Grease", "Bacteria", "Sweat" }
 	for _, resName in resourceOrder do
 		local container = Instance.new("Frame")
 		container.BackgroundTransparency = 1
-		container.Size = UDim2.new(0, 90, 0, 40)
+		container.Size = UDim2.new(0, 100, 0, 36)
 		container.Parent = bar
 
 		local icon = Instance.new("Frame")
@@ -203,7 +205,7 @@ function UIController.BuildResourceBar()
 
 		local nameLabel = makeLabel(container, {
 			text = resName,
-			size = UDim2.new(1, -15, 0, 16),
+			size = UDim2.new(1, -15, 0, 14),
 			position = UDim2.new(0, 15, 0, 2),
 			textSize = 10,
 			color = Constants.UI_COLORS.TextDim,
@@ -211,8 +213,8 @@ function UIController.BuildResourceBar()
 
 		local valueLabel = makeLabel(container, {
 			text = "0",
-			size = UDim2.new(1, -15, 0, 20),
-			position = UDim2.new(0, 15, 0, 16),
+			size = UDim2.new(1, -15, 0, 18),
+			position = UDim2.new(0, 15, 0, 15),
 			textSize = 14,
 			color = Constants.UI_COLORS[resName],
 		})
@@ -224,7 +226,7 @@ function UIController.BuildResourceBar()
 	-- Wave info
 	waveLabel = makeLabel(bar, {
 		text = "",
-		size = UDim2.new(0, 80, 0, 40),
+		size = UDim2.new(0, 70, 0, 36),
 		textSize = 11,
 		color = Constants.UI_COLORS.Warning,
 		align = Enum.TextXAlignment.Center,

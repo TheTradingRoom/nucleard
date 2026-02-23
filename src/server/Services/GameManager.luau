@@ -62,25 +62,33 @@ function GameManager.OnPlayerAdded(player: Player)
 
 	-- Hide character (RTS — no walking around)
 	local function hideCharacter(character)
-		-- Wait for humanoid to exist
-		local humanoid = character:WaitForChild("Humanoid", 5)
+		local rootPart = character:WaitForChild("HumanoidRootPart", 10)
+		local humanoid = character:WaitForChild("Humanoid", 10)
+
 		if humanoid then
-			-- Make invincible so no death loop
-			humanoid.MaxHealth = math.huge
-			humanoid.Health = math.huge
+			humanoid.MaxHealth = 99999
+			humanoid.Health = 99999
+			humanoid.WalkSpeed = 0
+			humanoid.JumpHeight = 0
+			humanoid.JumpPower = 0
 		end
 
-		-- Make all parts invisible and non-collidable
-		for _, part in character:GetDescendants() do
-			if part:IsA("BasePart") then
-				part.Transparency = 1
-				part.CanCollide = false
-			elseif part:IsA("Decal") or part:IsA("Texture") then
-				part.Transparency = 1
+		-- Teleport underground and anchor so character is invisible and immobile
+		if rootPart then
+			rootPart.CFrame = CFrame.new(32, -50, 32)
+			rootPart.Anchored = true
+		end
+
+		-- Make all parts invisible
+		for _, desc in character:GetDescendants() do
+			if desc:IsA("BasePart") then
+				desc.Transparency = 1
+				desc.CanCollide = false
+			elseif desc:IsA("Decal") or desc:IsA("Texture") then
+				desc.Transparency = 1
 			end
 		end
 
-		-- Also handle parts added later (accessories loading in)
 		character.DescendantAdded:Connect(function(desc)
 			if desc:IsA("BasePart") then
 				desc.Transparency = 1
