@@ -59,6 +59,44 @@ function GameManager.OnPlayerAdded(player: Player)
 
 	-- Start wave timer for this player
 	WaveSystem.StartForPlayer(player)
+
+	-- Hide character (RTS — no walking around)
+	local function hideCharacter(character)
+		-- Wait for humanoid to exist
+		local humanoid = character:WaitForChild("Humanoid", 5)
+		if humanoid then
+			-- Make invincible so no death loop
+			humanoid.MaxHealth = math.huge
+			humanoid.Health = math.huge
+		end
+
+		-- Make all parts invisible and non-collidable
+		for _, part in character:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.Transparency = 1
+				part.CanCollide = false
+			elseif part:IsA("Decal") or part:IsA("Texture") then
+				part.Transparency = 1
+			end
+		end
+
+		-- Also handle parts added later (accessories loading in)
+		character.DescendantAdded:Connect(function(desc)
+			if desc:IsA("BasePart") then
+				desc.Transparency = 1
+				desc.CanCollide = false
+			elseif desc:IsA("Decal") or desc:IsA("Texture") then
+				desc.Transparency = 1
+			end
+		end)
+	end
+
+	if player.Character then
+		task.spawn(hideCharacter, player.Character)
+	end
+	player.CharacterAdded:Connect(function(character)
+		task.spawn(hideCharacter, character)
+	end)
 end
 
 function GameManager.OnPlayerRemoving(player: Player)

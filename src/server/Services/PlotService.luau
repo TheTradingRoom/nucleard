@@ -82,8 +82,22 @@ function PlotService.AssignPlot(player: Player)
 		hLine.Parent = gridFolder
 	end
 
+	-- Add SpawnLocation on the plot (so players don't fall to death)
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = player.Name .. "_Spawn"
+	spawn.Size = Vector3.new(4, 1, 4)
+	spawn.Position = Vector3.new(originX + Constants.PLOT_SIZE / 2, 0.5, originZ + Constants.PLOT_SIZE / 2)
+	spawn.Anchored = true
+	spawn.Transparency = 1
+	spawn.CanCollide = true
+	spawn.Enabled = true
+	spawn.Neutral = false
+	spawn.TeamColor = BrickColor.new("Medium stone grey")
+	spawn.Parent = plotFolder
+
 	local plotData = {
 		baseplate = baseplate,
+		spawn = spawn,
 		origin = Vector3.new(originX, 0, originZ),
 	}
 	plots[player] = plotData
@@ -108,6 +122,9 @@ function PlotService.RemovePlot(player: Player)
 	local plot = plots[player]
 	if plot then
 		plot.baseplate:Destroy()
+		if plot.spawn then
+			plot.spawn:Destroy()
+		end
 		plots[player] = nil
 		print("[PlotService] Removed plot for", player.Name)
 	end
