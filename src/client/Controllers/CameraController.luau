@@ -113,8 +113,9 @@ end
 -- Get the world position the mouse is pointing at on the plot plane (Y=0.5)
 function CameraController.GetMouseWorldPosition()
 	local camera = workspace.CurrentCamera
-	local mouse = Players.LocalPlayer:GetMouse()
-	local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)
+	local UserInputService = game:GetService("UserInputService")
+	local mousePos = UserInputService:GetMouseLocation()
+	local ray = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
 	local planeY = 0.5
 	if ray.Direction.Y == 0 then
 		return nil

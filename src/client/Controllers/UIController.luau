@@ -107,6 +107,7 @@ function UIController.Init(inputController)
 	UIController.BuildNuclearPanel()
 	UIController.BuildMessageArea()
 	UIController.BuildGameOverScreen()
+	UIController.BuildTutorial()
 
 	-- Connect remote events
 	Remotes.ResourceUpdate.OnClientEvent:Connect(function(resources, income)
@@ -766,6 +767,92 @@ function UIController.OnBuildingClicked(part: BasePart)
 	if defId == "NuclearSilo" and nuclearState == "none" then
 		-- Nuclear system will handle this server-side when silo is built
 	end
+end
+
+function UIController.BuildTutorial()
+	local tutorialFrame = makeFrame(screenGui, {
+		size = UDim2.new(0, 320, 0, 380),
+		position = UDim2.new(1, -10, 0.5, 0),
+		anchor = Vector2.new(1, 0.5),
+		color = Constants.UI_COLORS.Background,
+		cornerRadius = 10,
+	})
+	tutorialFrame.Name = "Tutorial"
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingLeft = UDim.new(0, 12)
+	padding.PaddingRight = UDim.new(0, 12)
+	padding.PaddingTop = UDim.new(0, 10)
+	padding.PaddingBottom = UDim.new(0, 10)
+	padding.Parent = tutorialFrame
+
+	local title = makeLabel(tutorialFrame, {
+		text = "HOW TO PLAY",
+		size = UDim2.new(1, 0, 0, 24),
+		textSize = 18,
+		font = Enum.Font.GothamBold,
+		color = Constants.UI_COLORS.Age4,
+		align = Enum.TextXAlignment.Center,
+	})
+
+	local guideText = [[CONTROLS:
+  WASD / Arrows = Pan camera
+  Scroll = Zoom in/out
+  ESC = Cancel build / deselect
+
+BUILDING:
+  1. Click a building in the BUILD panel (left)
+  2. A ghost follows your mouse on the grid
+  3. Click to place it
+  4. Hold SHIFT + click = place multiple
+  5. Sebum Pumps = income! Build these first
+
+UNITS:
+  1. Build a Barracks first
+  2. Click on the placed Barracks
+  3. Unit training panel appears (bottom)
+  4. Click a unit to train it
+  5. Click units to select, right-click to move
+
+AGES:
+  Click "Advance Age" to unlock better stuff
+  Costs Sebum (shown on the button)
+
+WAVES:
+  Enemies attack every 60s from edges
+  Build Pustule Turrets (Age 2) to defend!
+
+WIN CONDITION:
+  1. Reach NUCLEAR AGE (Age 4)
+  2. Build a Nuclear Silo
+  3. Wait for enrichment (60s)
+  4. Click LAUNCH
+  5. Survive The Dermatologist boss!]]
+
+	local guideLabel = makeLabel(tutorialFrame, {
+		text = guideText,
+		size = UDim2.new(1, 0, 1, -60),
+		position = UDim2.new(0, 0, 0, 28),
+		textSize = 11,
+		font = Enum.Font.RobotoMono,
+		color = Constants.UI_COLORS.Text,
+		align = Enum.TextXAlignment.Left,
+	})
+	guideLabel.TextWrapped = true
+	guideLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+	-- Close button
+	local closeBtn = makeButton(tutorialFrame, {
+		text = "GOT IT (close)",
+		size = UDim2.new(1, 0, 0, 28),
+		position = UDim2.new(0, 0, 1, -28),
+		color = Constants.UI_COLORS.Success,
+		textColor = Constants.UI_COLORS.Background,
+		textSize = 13,
+	})
+	closeBtn.MouseButton1Click:Connect(function()
+		tutorialFrame.Visible = false
+	end)
 end
 
 return UIController
