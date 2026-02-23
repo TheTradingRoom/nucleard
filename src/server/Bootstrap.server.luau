@@ -75,19 +75,42 @@ for _, player in Players:GetPlayers() do
 	end)
 end
 
+-- Send server errors to clients via GameState remote
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local function serverLog(msg)
+	print("[Server] " .. msg)
+	pcall(function()
+		local Remotes = ReplicatedStorage:WaitForChild("Network", 5)
+		if Remotes then
+			Remotes = Remotes:WaitForChild("Remotes", 5)
+			if Remotes then
+				local gameState = Remotes:FindFirstChild("GameState")
+				if gameState then
+					for _, p in Players:GetPlayers() do
+						gameState:FireClient(p, "SERVER: " .. msg)
+					end
+				end
+			end
+		end
+	end)
+end
+
 -- Now init game systems
 local success, err = pcall(function()
+	serverLog("Looking for Services folder...")
 	local Services = script.Parent:WaitForChild("Services", 10)
 	if not Services then
 		error("Services folder not found in ServerScriptService")
 	end
+	serverLog("Services folder found")
 
 	local GameManager = require(Services:WaitForChild("GameManager"))
 	GameManager.Init()
 end)
 
 if success then
-	print("[Nuclear'd] Server ready.")
+	serverLog("SERVER READY - all systems go")
 else
+	serverLog("SERVER INIT FAILED: " .. tostring(err))
 	warn("[Nuclear'd] SERVER INIT FAILED:", err)
 end
