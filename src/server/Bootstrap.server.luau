@@ -3,7 +3,13 @@
 
 print("[Nuclear'd] Server starting...")
 
-local GameManager = require(script.Parent.Services.GameManager)
-GameManager.Init()
+local success, err = pcall(function()
+	local GameManager = require(script.Parent.Services.GameManager)
+	GameManager.Init()
+end)
 
-print("[Nuclear'd] Server ready.")
+if success then
+	print("[Nuclear'd] Server ready.")
+else
+	warn("[Nuclear'd] SERVER INIT FAILED:", err)
+end

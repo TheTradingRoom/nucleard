@@ -29,7 +29,8 @@
           "Transparency": 0,
           "CanCollide": true,
           "Enabled": true,
-          "Neutral": true
+          "Neutral": true,
+          "Duration": 0
         }
       }
     },
