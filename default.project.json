@@ -35,7 +35,7 @@
           "Size": [512, 1, 512],
           "Position": [0, -0.5, 0],
           "Anchored": true,
-          "Color": [240, 180, 160],
+          "Color": [0.94, 0.71, 0.63],
           "Material": "SmoothPlastic",
           "TopSurface": "Smooth",
           "BottomSurface": "Smooth",
@@ -89,7 +89,7 @@
         "Brightness": 2,
         "Technology": "ShadowMap",
         "ClockTime": 14.5,
-        "Ambient": [40, 30, 50]
+        "Ambient": [0.16, 0.12, 0.2]
       }
     },
 
