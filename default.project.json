@@ -15,6 +15,22 @@
       "$className": "Workspace",
       "$properties": {
         "Gravity": 196.2
+      },
+      "Baseplate": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Size": [512, 1, 512],
+          "Position": [0, -0.5, 0],
+          "Anchored": true,
+          "Color": [240, 180, 160],
+          "Material": "SmoothPlastic",
+          "TopSurface": "Smooth",
+          "BottomSurface": "Smooth",
+          "Transparency": 0,
+          "CanCollide": true,
+          "Enabled": true,
+          "Neutral": true
+        }
       }
     },
 
