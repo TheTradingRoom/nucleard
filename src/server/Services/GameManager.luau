@@ -62,6 +62,17 @@ function GameManager.OnPlayerAdded(player: Player)
 
 	-- Hide character (RTS — no walking around)
 	local function hideCharacter(character)
+		-- Destroy ForceField from SpawnLocation
+		local forceField = character:FindFirstChildOfClass("ForceField")
+		if forceField then
+			forceField:Destroy()
+		end
+		character.ChildAdded:Connect(function(child)
+			if child:IsA("ForceField") then
+				child:Destroy()
+			end
+		end)
+
 		local rootPart = character:WaitForChild("HumanoidRootPart", 10)
 		local humanoid = character:WaitForChild("Humanoid", 10)
 

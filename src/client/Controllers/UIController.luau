@@ -165,7 +165,7 @@ function UIController.BuildResourceBar()
 
 	-- Resource bar
 	local bar = makeFrame(screenGui, {
-		size = UDim2.new(0, 500, 0, 44),
+		size = UDim2.new(0, 540, 0, 44),
 		position = UDim2.new(0.5, 0, 0, 32),
 		anchor = Vector2.new(0.5, 0),
 		color = Constants.UI_COLORS.Background,
@@ -174,8 +174,8 @@ function UIController.BuildResourceBar()
 	bar.Name = "ResourceBar"
 
 	local padding = Instance.new("UIPadding")
-	padding.PaddingLeft = UDim.new(0, 10)
-	padding.PaddingRight = UDim.new(0, 10)
+	padding.PaddingLeft = UDim.new(0, 20)
+	padding.PaddingRight = UDim.new(0, 20)
 	padding.Parent = bar
 
 	local layout = Instance.new("UIListLayout")
