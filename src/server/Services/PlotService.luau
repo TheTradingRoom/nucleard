@@ -113,7 +113,7 @@ function PlotService.GetPlot(player: Player)
 	return plots[player]
 end
 
-function PlotService.GetPlotOrigin(player: Player): Vector3?
+function PlotService.GetPlotOrigin(player: Player)
 	local plot = plots[player]
 	return plot and plot.origin or nil
 end
@@ -144,7 +144,7 @@ function PlotService.IsInPlot(player: Player, worldPos: Vector3): boolean
 end
 
 -- Convert world position to grid coordinates (1-based)
-function PlotService.WorldToGrid(player: Player, worldPos: Vector3): (number, number)?
+function PlotService.WorldToGrid(player: Player, worldPos: Vector3)
 	local plot = plots[player]
 	if not plot then
 		return nil
@@ -162,7 +162,7 @@ function PlotService.WorldToGrid(player: Player, worldPos: Vector3): (number, nu
 end
 
 -- Convert grid coordinates to world position (center of cell)
-function PlotService.GridToWorld(player: Player, gridX: number, gridZ: number): Vector3?
+function PlotService.GridToWorld(player: Player, gridX: number, gridZ: number)
 	local plot = plots[player]
 	if not plot then
 		return nil

@@ -111,7 +111,7 @@ function CameraController.Update(dt: number)
 end
 
 -- Get the world position the mouse is pointing at on the plot plane (Y=0.5)
-function CameraController.GetMouseWorldPosition(): Vector3?
+function CameraController.GetMouseWorldPosition()
 	local camera = workspace.CurrentCamera
 	local mouse = Players.LocalPlayer:GetMouse()
 	local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)

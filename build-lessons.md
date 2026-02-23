@@ -291,6 +291,75 @@ Values > 1.0 get clamped to 1.0, so `[240, 180, 160]` → `[1, 1, 1]` = white. A
 
 ---
 
+## 10. WASD Conflicts — Disable Default Character Controls
+
+**Problem:** WASD keys move the player's avatar instead of panning the custom RTS camera.
+
+**Root Cause:** Roblox's built-in PlayerModule captures WASD/arrow keys for character movement. Even with `WalkSpeed = 0`, the default scripts still consume the input events, preventing your custom camera from seeing them.
+
+**Fix — Server side** (in Bootstrap or project.json):
+```lua
+local StarterPlayer = game:GetService("StarterPlayer")
+StarterPlayer.DevComputerMovementMode = Enum.DevComputerMovementMode.Scriptable
+StarterPlayer.DevTouchMovementMode = Enum.DevTouchMovementMode.Scriptable
+```
+
+**Fix — Client side** (disable the PlayerModule controls):
+```lua
+local PlayerModule = require(player.PlayerScripts:WaitForChild("PlayerModule", 10))
+local controls = PlayerModule:GetControls()
+controls:Disable()
+```
+
+**Rule:** For any non-standard camera/movement game (RTS, top-down, fixed camera), disable both the server movement mode AND the client PlayerModule controls.
+
+---
+
+## 11. Character Hiding Must Be Independent of Game Systems
+
+**Problem:** Character hiding code was inside `GameManager.OnPlayerAdded()`. If GameManager failed to init (e.g., due to a require error), character hiding never ran — player avatar stayed visible.
+
+**Root Cause:** Coupling critical UX code (hiding the avatar) to game logic initialization. If any service in the chain errors, everything downstream fails.
+
+**Fix:** Move character hiding to Bootstrap.server.luau, BEFORE game system init:
+```lua
+-- This runs even if GameManager.Init() fails
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        task.spawn(hideCharacter, player, character)
+    end)
+end)
+
+-- Game systems init (may fail, but character is still hidden)
+local success, err = pcall(function()
+    GameManager.Init()
+end)
+```
+
+**Rule:** Safety-critical code (spawn handling, character setup, crash recovery) should run independently from game logic, not nested inside it.
+
+---
+
+## 12. On-Screen Debug Log — You Can't Copy from Roblox Dev Console
+
+**Problem:** Errors only visible in F9 Developer Console, which doesn't support copy/paste. Debugging via screenshots of tiny console text is painful.
+
+**Fix:** Create a ScreenGui debug panel that captures LogService messages and displays them on-screen:
+```lua
+local LogService = game:GetService("LogService")
+LogService.MessageOut:Connect(function(message, messageType)
+    if message:find("YourGame") then
+        addDebugLine(message, colorByType[messageType])
+    end
+end)
+```
+
+For server errors, forward them to clients via a RemoteEvent so they appear in the same panel.
+
+**Rule:** For any Rojo-published game without Studio access, add a debug overlay early. Remove it before public release.
+
+---
+
 ## Summary Checklist — Before Every Publish
 
 - [ ] Every subdirectory has `init.meta.json` with `"className": "Folder"`
@@ -303,4 +372,7 @@ Values > 1.0 get clamped to 1.0, so `[240, 180, 160]` → `[1, 1, 1]` = white. A
 - [ ] Camera forced to Scriptable every frame in RenderStepped
 - [ ] Floor/ground exists as static Part in project tree
 - [ ] All Color3 values in project.json are 0-1 floats (not 0-255)
+- [ ] Default movement controls disabled (DevComputerMovementMode + PlayerModule)
+- [ ] Character hiding runs independently in Bootstrap (not inside game system init)
+- [ ] On-screen debug log added during development
 - [ ] Check F9 Developer Console after every publish

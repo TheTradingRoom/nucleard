@@ -58,7 +58,7 @@ function InputController.Init()
 	print("[InputController] Initialized")
 end
 
-function InputController.GetMouseWorldPosition(): Vector3?
+function InputController.GetMouseWorldPosition()
 	return CameraController.GetMouseWorldPosition()
 end
 
