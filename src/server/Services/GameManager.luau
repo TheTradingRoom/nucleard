@@ -60,62 +60,7 @@ function GameManager.OnPlayerAdded(player: Player)
 	-- Start wave timer for this player
 	WaveSystem.StartForPlayer(player)
 
-	-- Hide character (RTS — no walking around)
-	local function hideCharacter(character)
-		-- Destroy ForceField from SpawnLocation
-		local forceField = character:FindFirstChildOfClass("ForceField")
-		if forceField then
-			forceField:Destroy()
-		end
-		character.ChildAdded:Connect(function(child)
-			if child:IsA("ForceField") then
-				child:Destroy()
-			end
-		end)
-
-		local rootPart = character:WaitForChild("HumanoidRootPart", 10)
-		local humanoid = character:WaitForChild("Humanoid", 10)
-
-		if humanoid then
-			humanoid.MaxHealth = 99999
-			humanoid.Health = 99999
-			humanoid.WalkSpeed = 0
-			humanoid.JumpHeight = 0
-			humanoid.JumpPower = 0
-		end
-
-		-- Teleport underground and anchor so character is invisible and immobile
-		if rootPart then
-			rootPart.CFrame = CFrame.new(32, -50, 32)
-			rootPart.Anchored = true
-		end
-
-		-- Make all parts invisible
-		for _, desc in character:GetDescendants() do
-			if desc:IsA("BasePart") then
-				desc.Transparency = 1
-				desc.CanCollide = false
-			elseif desc:IsA("Decal") or desc:IsA("Texture") then
-				desc.Transparency = 1
-			end
-		end
-
-		character.DescendantAdded:Connect(function(desc)
-			if desc:IsA("BasePart") then
-				desc.Transparency = 1
-				desc.CanCollide = false
-			elseif desc:IsA("Decal") or desc:IsA("Texture") then
-				desc.Transparency = 1
-			end
-		end)
-	end
-
-	if player.Character then
-		task.spawn(hideCharacter, player.Character)
-	end
-	player.CharacterAdded:Connect(function(character)
-		task.spawn(hideCharacter, character)
-	end)
+	-- Character hiding is handled by Bootstrap.server.luau
 end
 
 function GameManager.OnPlayerRemoving(player: Player)

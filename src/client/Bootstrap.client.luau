@@ -2,9 +2,14 @@
 -- Initializes all client-side controllers
 
 local Players = game:GetService("Players")
+local PlayerModule = require(Players.LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"))
 local player = Players.LocalPlayer
 
 print("[Nuclear'd] Client starting for", player.Name)
+
+-- Disable default Roblox character controls (WASD should pan camera, not move avatar)
+local controls = PlayerModule:GetControls()
+controls:Disable()
 
 local success, err = pcall(function()
 	local Controllers = script.Parent:WaitForChild("Controllers", 10)
