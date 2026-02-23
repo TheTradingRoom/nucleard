@@ -7,9 +7,14 @@ local player = Players.LocalPlayer
 print("[Nuclear'd] Client starting for", player.Name)
 
 local success, err = pcall(function()
-	local CameraController = require(script.Parent.Controllers.CameraController)
-	local InputController = require(script.Parent.Controllers.InputController)
-	local UIController = require(script.Parent.Controllers.UIController)
+	local Controllers = script.Parent:WaitForChild("Controllers", 10)
+	if not Controllers then
+		error("Controllers folder not found in PlayerScripts")
+	end
+
+	local CameraController = require(Controllers:WaitForChild("CameraController"))
+	local InputController = require(Controllers:WaitForChild("InputController"))
+	local UIController = require(Controllers:WaitForChild("UIController"))
 
 	-- Initialize in order (camera first, then input, then UI)
 	CameraController.Init()

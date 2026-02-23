@@ -4,7 +4,12 @@
 print("[Nuclear'd] Server starting...")
 
 local success, err = pcall(function()
-	local GameManager = require(script.Parent.Services.GameManager)
+	local Services = script.Parent:WaitForChild("Services", 10)
+	if not Services then
+		error("Services folder not found in ServerScriptService")
+	end
+
+	local GameManager = require(Services:WaitForChild("GameManager"))
 	GameManager.Init()
 end)
 
