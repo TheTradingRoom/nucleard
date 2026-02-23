@@ -39,34 +39,31 @@ function UnitSystem.HandleTrainRequest(player: Player, buildingId: string, unitD
 
 	local BuildingSystem = require(script.Parent.BuildingSystem)
 	local building = BuildingSystem.GetBuilding(buildingId)
-	if not building or building.owner ~= player then
+	if not building then
+		return
+	end
+	if building.owner ~= player then
 		return
 	end
 
-	-- Check building is a barracks type
-	local buildingDef = Buildings[building.defId]
 	if building.defId ~= "Barracks" and building.defId ~= "AdvancedBarracks" then
 		return
 	end
 
-	-- Check unit definition
 	local unitDef = Units[unitDefId]
 	if not unitDef then
 		return
 	end
 
-	-- Check age requirement
 	local TechSystem = require(script.Parent.TechSystem)
 	if TechSystem.GetAge(player) < unitDef.ageRequired then
 		return
 	end
 
-	-- Check if Advanced Barracks is required (age 3+ units)
 	if unitDef.ageRequired >= 3 and building.defId ~= "AdvancedBarracks" then
 		return
 	end
 
-	-- Limit queue size
 	local queue = trainingQueues[buildingId]
 	if not queue then
 		queue = {}
@@ -76,14 +73,12 @@ function UnitSystem.HandleTrainRequest(player: Player, buildingId: string, unitD
 		return
 	end
 
-	-- Check resources
 	if not ResourceSystem.CanAfford(player, unitDef.cost) then
 		return
 	end
 
 	ResourceSystem.Deduct(player, unitDef.cost)
 
-	-- Add to queue
 	local lastFinish = tick()
 	if #queue > 0 then
 		lastFinish = queue[#queue].finishTime
@@ -94,8 +89,6 @@ function UnitSystem.HandleTrainRequest(player: Player, buildingId: string, unitD
 		owner = player,
 		buildingId = buildingId,
 	})
-
-	print("[UnitSystem] Queued", unitDef.name, "for", player.Name)
 end
 
 function UnitSystem.HandleMoveCommand(player: Player, unitIds, targetPos)
@@ -152,29 +145,13 @@ function UnitSystem.SpawnUnit(player: Player, defId: string, position: Vector3)
 	selectionRing.Transparency = 1
 	selectionRing.Parent = part
 
-	-- Label
-	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Size = UDim2.new(0, 80, 0, 20)
-	billboardGui.StudsOffset = Vector3.new(0, def.size / 2 + 1, 0)
-	billboardGui.AlwaysOnTop = true
-	billboardGui.Parent = part
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextStrokeTransparency = 0.5
-	label.Font = Enum.Font.GothamBold
-	label.TextScaled = true
-	label.Text = def.name
-	label.Parent = billboardGui
-
-	-- Health bar
+	-- Health bar (hidden until damaged)
 	local healthBarGui = Instance.new("BillboardGui")
 	healthBarGui.Name = "HealthBar"
-	healthBarGui.Size = UDim2.new(0, 60, 0, 6)
-	healthBarGui.StudsOffset = Vector3.new(0, def.size / 2 + 1.8, 0)
-	healthBarGui.AlwaysOnTop = true
+	healthBarGui.Size = UDim2.new(0, 40, 0, 4)
+	healthBarGui.StudsOffset = Vector3.new(0, def.size / 2 + 0.3, 0)
+	healthBarGui.AlwaysOnTop = false
+	healthBarGui.Enabled = false
 	healthBarGui.Parent = part
 
 	local healthBg = Instance.new("Frame")
@@ -221,7 +198,7 @@ function UnitSystem.SpawnUnit(player: Player, defId: string, position: Vector3)
 	return unit
 end
 
--- Process training queues (called from economy tick)
+-- Process training queues (called from combat tick)
 function UnitSystem.ProcessTrainingQueues()
 	local now = tick()
 	local BuildingSystem = require(script.Parent.BuildingSystem)
@@ -231,14 +208,17 @@ function UnitSystem.ProcessTrainingQueues()
 			local entry = table.remove(queue, 1)
 			local building = BuildingSystem.GetBuilding(buildingId)
 			if building and building.part then
-				-- Spawn next to the barracks
-				local spawnPos = building.part.Position + Vector3.new(
-					(math.random() - 0.5) * 6,
-					0,
-					(math.random() - 0.5) * 6
-				)
+				-- Spawn outside the barracks (random side, offset by building size + unit size)
+				local bSize = building.part.Size.X / 2 + 4
+				local side = math.random(1, 4)
+				local offX, offZ = 0, 0
+				if side == 1 then offX = bSize + math.random() * 3
+				elseif side == 2 then offX = -bSize - math.random() * 3
+				elseif side == 3 then offZ = bSize + math.random() * 3
+				else offZ = -bSize - math.random() * 3
+				end
+				local spawnPos = building.part.Position + Vector3.new(offX, 0, offZ)
 				UnitSystem.SpawnUnit(entry.owner, entry.defId, spawnPos)
-				print("[UnitSystem] Trained", entry.defId, "for", entry.owner.Name)
 			end
 		end
 	end
@@ -297,10 +277,66 @@ function UnitSystem.CombatTick()
 		local unitPos = unit.part.Position
 		local nearestEnemy, nearestDist = WaveSystem.FindNearestEnemy(unit.owner, unitPos, unit.range)
 
-		if nearestEnemy then
+		if nearestEnemy and nearestEnemy.part then
 			unit.lastAttackTime = now
 			unit.target = nil -- stop moving, fight!
+
+			local unitPos = unit.part.Position
+			local enemyPos = nearestEnemy.part.Position
+
+			if unit.range <= 6 then
+				-- Melee: splash ring at enemy position
+				local splash = Instance.new("Part")
+				splash.Name = "MeleeSplash"
+				splash.Shape = Enum.PartType.Cylinder
+				splash.Size = Vector3.new(0.3, unit.range * 2, unit.range * 2)
+				splash.CFrame = CFrame.new(enemyPos.X, 0.6, enemyPos.Z) * CFrame.Angles(0, 0, math.rad(90))
+				splash.Anchored = true
+				splash.CanCollide = false
+				splash.Color = unit.part.Color
+				splash.Material = Enum.Material.Neon
+				splash.Transparency = 0.4
+				splash.Parent = workspace
+				task.delay(0.2, function()
+					splash:Destroy()
+				end)
+			else
+				-- Ranged: beam from unit to enemy
+				local midPoint = (unitPos + enemyPos) / 2
+				local dist = (enemyPos - unitPos).Magnitude
+
+				local beam = Instance.new("Part")
+				beam.Name = "AttackBeam"
+				beam.Size = Vector3.new(0.3, 0.3, dist)
+				beam.CFrame = CFrame.lookAt(midPoint, enemyPos)
+				beam.Anchored = true
+				beam.CanCollide = false
+				beam.Color = unit.part.Color
+				beam.Material = Enum.Material.Neon
+				beam.Transparency = 0.3
+				beam.Parent = workspace
+				task.delay(0.15, function()
+					beam:Destroy()
+				end)
+			end
+
+			-- Unit briefly flashes neon when attacking
+			task.spawn(function()
+				unit.part.Material = Enum.Material.Neon
+				task.wait(0.1)
+				if unit.part then
+					unit.part.Material = Enum.Material.SmoothPlastic
+				end
+			end)
+
 			WaveSystem.DamageEnemy(nearestEnemy.id, unit.damage, unit.owner)
+		elseif not unit.target and unit.range <= 6 then
+			-- Melee auto-chase: move toward nearest enemy within aggro range (3x attack range)
+			local aggroRange = unit.range * 5
+			local chaseEnemy, chaseDist = WaveSystem.FindNearestEnemy(unit.owner, unit.part.Position, aggroRange)
+			if chaseEnemy and chaseEnemy.part then
+				unit.target = chaseEnemy.part.Position
+			end
 		end
 	end
 end
@@ -313,10 +349,11 @@ function UnitSystem.DamageUnit(unitId: string, damage: number): boolean
 
 	unit.health -= damage
 
-	-- Update health bar
+	-- Update health bar (show on first damage)
 	if unit.part then
 		local healthBar = unit.part:FindFirstChild("HealthBar")
 		if healthBar then
+			healthBar.Enabled = true
 			local bg = healthBar:FindFirstChildWhichIsA("Frame")
 			if bg then
 				local fill = bg:FindFirstChild("Fill")

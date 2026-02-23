@@ -360,6 +360,165 @@ For server errors, forward them to clients via a RemoteEvent so they appear in t
 
 ---
 
+## 13. Luau Return Type Annotations — No `?` on Function Returns
+
+**Problem:** `PlotService:147: Expected identifier when parsing expression, got '?'` — kills the entire module.
+
+**Root Cause:** Luau supports `Type?` (optional) in table field annotations, but NOT on function return types. `): Vector3?` or `): (number, number)?` causes a parse error.
+
+**Fix:** Remove `?` from function return type annotations. They're optional anyway:
+```lua
+-- BAD — parse error
+function Foo(): Vector3?
+function Bar(): (number, number)?
+
+-- GOOD
+function Foo()
+function Bar()
+```
+
+**Rule:** Never use `?` on function return types. Only use it in table type fields (`field: Type?`).
+
+---
+
+## 14. Mouse Raycasting — ViewportPointToRay, Not ScreenPointToRay
+
+**Problem:** Building placement always goes to grid position (1,1) regardless of where the mouse is.
+
+**Root Cause:** `Mouse.X/Y` returns screen coordinates that include the Roblox top bar (36px). `ScreenPointToRay` also accounts for the top bar. But with Scriptable cameras, the coordinate systems can mismatch, causing wrong world positions.
+
+**Fix:** Use `UserInputService:GetMouseLocation()` + `ViewportPointToRay()`:
+```lua
+-- BAD — coordinate mismatch with Scriptable camera
+local mouse = Players.LocalPlayer:GetMouse()
+local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)
+
+-- GOOD — consistent viewport coordinates
+local UIS = game:GetService("UserInputService")
+local mousePos = UIS:GetMouseLocation()
+local ray = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
+```
+
+**Rule:** For custom/Scriptable cameras, always use `GetMouseLocation()` + `ViewportPointToRay()`. Never use the deprecated `Mouse` object for raycasting.
+
+---
+
+## 15. RemoteEvent Race Condition — Server Fires Before Client Listens
+
+**Problem:** `plotOrigin` was always `nil` on the client. Ghost wouldn't follow mouse, grid placement failed. Camera only worked because its default center `(32, 0, 32)` happened to match the first plot.
+
+**Root Cause:** The server fires `PlotAssigned` during `PlayerAdded` → `PlotService.AssignPlot()`. But the client hasn't loaded yet — Bootstrap is still requiring modules and calling `Init()`. By the time `InputController.Init()` connects `.OnClientEvent`, the event was already fired and lost forever.
+
+**This is the #1 silent killer in Rojo builds.** Unlike `WaitForChild` (which waits), `OnClientEvent:Connect` only captures FUTURE events. There is no replay buffer.
+
+**Fix — Use Player Attributes (always readable, no timing issue):**
+
+Server side:
+```lua
+-- In PlotService.AssignPlot()
+player:SetAttribute("PlotOriginX", originX)
+player:SetAttribute("PlotOriginZ", originZ)
+player:SetAttribute("PlotSize", Constants.PLOT_SIZE)
+
+-- Also fire event as backup for any listeners already connected
+Remotes.PlotAssigned:FireClient(player, plotData.origin, Constants.PLOT_SIZE)
+```
+
+Client side:
+```lua
+-- Try reading attributes first (already set if server ran before client loaded)
+local ox = player:GetAttribute("PlotOriginX")
+local oz = player:GetAttribute("PlotOriginZ")
+local sz = player:GetAttribute("PlotSize")
+if ox and oz and sz then
+    plotOrigin = Vector3.new(ox, 0, oz)
+    plotSize = sz
+else
+    -- Not set yet — listen for attribute changes
+    player:GetAttributeChangedSignal("PlotOriginX"):Connect(function()
+        -- read attributes here
+    end)
+end
+
+-- Also listen for the event (belt and suspenders)
+Remotes:WaitForChild("PlotAssigned").OnClientEvent:Connect(function(origin, size)
+    plotOrigin = origin
+    plotSize = size
+end)
+```
+
+**Rule:** For any one-shot server→client data (plot assignment, initial state, player config), ALWAYS store it as Player attributes AND fire the RemoteEvent. Client reads attributes first, connects event as fallback. Never rely solely on a RemoteEvent fired during PlayerAdded.
+
+---
+
+## 16. Build Mode Ghost — Don't Parent at Default Position
+
+**Problem:** Player clicks "Build Barracks" in the panel → ghost Part appears at grid (1,1) in the top-left corner. Player has to "collect" it by moving mouse over the grid.
+
+**Root Cause:** When the build button is clicked, the mouse is over the GUI panel (off the grid). The ghost Part is created with `Instance.new("Part")` which defaults to position `(0, 0, 0)` — which happens to be the plot origin (grid 1,1). The ghost is visible at the wrong spot until `RenderStepped` moves it.
+
+**Fix:** Create the ghost hidden and underground. Only show it once the mouse is actually over the grid:
+```lua
+-- In EnterBuildMode():
+ghostPart.Transparency = 1  -- invisible
+ghostPart.Position = Vector3.new(0, -100, 0)  -- underground
+ghostPart.Parent = workspace
+
+-- In UpdateGhost() (runs every frame):
+if not gridX or not gridZ then
+    -- Mouse is off grid — hide ghost
+    ghostPart.Transparency = 1
+    ghostPart.Position = Vector3.new(0, -100, 0)
+    return
+end
+-- Mouse is on grid — show and snap
+ghostPart.Transparency = 0.4
+ghostPart.Position = snapPos
+```
+
+**Rule:** Never parent a Part at its default position `(0, 0, 0)` and rely on the next frame to move it. Players will see it flash at the wrong spot. Either position it correctly before parenting, or create it hidden.
+
+---
+
+## 17. BillboardGui Clutter — Health Bars and Labels Block the View
+
+**Problem:** Every building, unit, and enemy has a floating name label AND health bar above it. With 10+ buildings and units on screen, the map is unreadable — text everywhere, overlapping, blocking the actual game objects.
+
+**Root Cause:** `AlwaysOnTop = true` on BillboardGuis means they render through everything. Name labels + health bars on every entity = visual noise explosion.
+
+**Fix:**
+1. **Remove name labels entirely** — buildings are distinguished by color/size, units by shape. Names are in the UI panels.
+2. **Health bars hidden until damaged** — set `Enabled = false` on creation, set `Enabled = true` in `DamageBuilding()`/`DamageUnit()`
+3. **Smaller health bars** — `UDim2.new(0, 40, 0, 4)` instead of `(0, 80, 0, 8)`
+4. **AlwaysOnTop = false** — health bars render naturally (hidden behind buildings gives depth)
+
+```lua
+-- Creation:
+healthBarGui.AlwaysOnTop = false
+healthBarGui.Enabled = false  -- hidden until damaged
+
+-- In DamageBuilding()/DamageUnit():
+healthBar.Enabled = true  -- show on first damage
+```
+
+**Exception:** Enemy health bars should always be visible (they're threats the player needs to assess).
+
+**Rule:** In top-down/RTS games, minimize world-space UI. Only show information the player needs in the moment. Use screen-space UI (panels) for details.
+
+---
+
+## 18. gameProcessed Timing with Programmatic GUIs
+
+**Problem:** Expected `gameProcessed = true` in `InputBegan` when clicking GUI buttons, which would prevent `OnLeftClick()` from firing. It DID work — but the build mode entered on `MouseButton1Click` (mouse UP) while `InputBegan` fires on mouse DOWN. So the NEXT click (on the game world) was the real placement click, not the same one.
+
+**Insight:** `InputBegan` = mouse DOWN (fires first), `MouseButton1Click` = mouse UP (fires second). They're different events on the same physical click. `gameProcessed` correctly filters the DOWN event when over GUI, and the button's UP event enters build mode. This means the frame-count guard (`buildModeFrameCount < 2`) was unnecessary for this specific case — but it's still good defensive code.
+
+**Real issue was:** Ghost appeared at wrong position (lesson 16) + plotOrigin was nil (lesson 15), making it LOOK like same-click placement.
+
+**Rule:** When debugging "click does two things at once," trace the exact event order: InputBegan (DOWN) → gameProcessed check → MouseButton1Click (UP). They're rarely the same frame. The real bug is usually elsewhere.
+
+---
+
 ## Summary Checklist — Before Every Publish
 
 - [ ] Every subdirectory has `init.meta.json` with `"className": "Folder"`
@@ -374,5 +533,8 @@ For server errors, forward them to clients via a RemoteEvent so they appear in t
 - [ ] All Color3 values in project.json are 0-1 floats (not 0-255)
 - [ ] Default movement controls disabled (DevComputerMovementMode + PlayerModule)
 - [ ] Character hiding runs independently in Bootstrap (not inside game system init)
+- [ ] One-shot server→client data uses Player attributes (not just RemoteEvent)
+- [ ] Ghost/preview Parts created hidden, only shown when properly positioned
+- [ ] World-space UI (BillboardGui) kept minimal — health bars hidden until damaged, no name labels
 - [ ] On-screen debug log added during development
 - [ ] Check F9 Developer Console after every publish

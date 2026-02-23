@@ -2,6 +2,7 @@
 -- Top-level orchestrator: initializes all services, handles player lifecycle
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local PlotService = require(script.Parent.PlotService)
 local ResourceSystem = require(script.Parent.ResourceSystem)
@@ -10,6 +11,8 @@ local TechSystem = require(script.Parent.TechSystem)
 local UnitSystem = require(script.Parent.UnitSystem)
 local WaveSystem = require(script.Parent.WaveSystem)
 local NuclearSystem = require(script.Parent.NuclearSystem)
+
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local GameManager = {}
 
@@ -32,6 +35,11 @@ function GameManager.Init()
 
 	Players.PlayerRemoving:Connect(function(player)
 		GameManager.OnPlayerRemoving(player)
+	end)
+
+	-- Restart handler
+	Remotes:WaitForChild("RestartGame").OnServerEvent:Connect(function(player)
+		GameManager.RestartForPlayer(player)
 	end)
 
 	-- Handle players who joined before this script ran
@@ -74,6 +82,33 @@ function GameManager.OnPlayerRemoving(player: Player)
 	TechSystem.CleanupPlayer(player)
 	ResourceSystem.CleanupPlayer(player)
 	PlotService.RemovePlot(player)
+end
+
+function GameManager.RestartForPlayer(player: Player)
+	print("[GameManager] Restarting game for:", player.Name)
+
+	-- Cleanup everything (same as leaving)
+	NuclearSystem.CleanupPlayer(player)
+	WaveSystem.CleanupPlayer(player)
+	UnitSystem.CleanupPlayer(player)
+	BuildingSystem.CleanupPlayer(player)
+	TechSystem.CleanupPlayer(player)
+	ResourceSystem.CleanupPlayer(player)
+	PlotService.RemovePlot(player)
+
+	-- Notify client to reset UI
+	Remotes.RestartGame:FireClient(player)
+
+	-- Small delay to let cleanup finish
+	task.wait(0.5)
+
+	-- Re-initialize (same as joining)
+	PlotService.AssignPlot(player)
+	ResourceSystem.InitPlayer(player)
+	TechSystem.InitPlayer(player)
+	WaveSystem.StartForPlayer(player)
+
+	print("[GameManager] Game restarted for:", player.Name)
 end
 
 function GameManager.StartTickLoops()

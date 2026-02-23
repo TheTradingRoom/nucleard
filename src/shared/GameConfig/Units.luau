@@ -18,7 +18,7 @@ local Units = {
 		trainTime = 3,
 		ageRequired = 1,
 		color = Color3.fromRGB(255, 255, 230),
-		size = 2,
+		size = 4,
 		description = "Basic melee unit. Cheap and expendable.",
 	},
 	Blackhead = {
@@ -33,7 +33,7 @@ local Units = {
 		trainTime = 5,
 		ageRequired = 1,
 		color = Color3.fromRGB(60, 60, 60),
-		size = 2,
+		size = 4,
 		description = "Ranged unit. Fires dark projectiles.",
 	},
 
@@ -50,7 +50,7 @@ local Units = {
 		trainTime = 6,
 		ageRequired = 2,
 		color = Color3.fromRGB(255, 255, 100),
-		size = 3,
+		size = 5,
 		description = "Heavy melee. Explodes on death dealing area damage.",
 	},
 	Papule = {
@@ -65,7 +65,7 @@ local Units = {
 		trainTime = 5,
 		ageRequired = 2,
 		color = Color3.fromRGB(255, 130, 130),
-		size = 2,
+		size = 4,
 		description = "Fast ranged unit. Glass cannon.",
 	},
 
@@ -82,7 +82,7 @@ local Units = {
 		trainTime = 10,
 		ageRequired = 3,
 		color = Color3.fromRGB(180, 60, 60),
-		size = 4,
+		size = 7,
 		description = "Tank unit. Slow but incredibly tough.",
 	},
 	Carbuncle = {
@@ -97,7 +97,7 @@ local Units = {
 		trainTime = 8,
 		ageRequired = 3,
 		color = Color3.fromRGB(100, 20, 20),
-		size = 3,
+		size = 5,
 		description = "Elite ranged unit. Devastating attacks.",
 	},
 
@@ -114,7 +114,7 @@ local Units = {
 		trainTime = 15,
 		ageRequired = 4,
 		color = Color3.fromRGB(80, 0, 80),
-		size = 5,
+		size = 8,
 		description = "Ultimate tank. Walking fortress of infection.",
 	},
 }

@@ -102,7 +102,12 @@ function PlotService.AssignPlot(player: Player)
 	}
 	plots[player] = plotData
 
-	-- Notify client
+	-- Store plot data as player attributes (client can read these immediately, no race condition)
+	player:SetAttribute("PlotOriginX", originX)
+	player:SetAttribute("PlotOriginZ", originZ)
+	player:SetAttribute("PlotSize", Constants.PLOT_SIZE)
+
+	-- Also fire event (for any listeners already connected)
 	Remotes.PlotAssigned:FireClient(player, plotData.origin, Constants.PLOT_SIZE)
 
 	print("[PlotService] Assigned plot to", player.Name, "at", plotData.origin)

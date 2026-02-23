@@ -14,7 +14,7 @@ local Enemies = {
 		moveSpeed = 10,
 		range = 4,
 		color = Color3.fromRGB(240, 240, 255),
-		size = 2,
+		size = 4,
 		reward = res(10, 0, 0, 0),
 	},
 	SalicylicDrop = {
@@ -25,7 +25,7 @@ local Enemies = {
 		moveSpeed = 14,
 		range = 18,
 		color = Color3.fromRGB(150, 220, 255),
-		size = 2,
+		size = 4,
 		reward = res(15, 5, 0, 0),
 	},
 	BenzoylBlob = {
@@ -36,7 +36,7 @@ local Enemies = {
 		moveSpeed = 7,
 		range = 5,
 		color = Color3.fromRGB(200, 200, 255),
-		size = 3,
+		size = 5,
 		reward = res(20, 10, 5, 0),
 	},
 	RetinoidRoller = {
@@ -47,7 +47,7 @@ local Enemies = {
 		moveSpeed = 5,
 		range = 6,
 		color = Color3.fromRGB(255, 200, 100),
-		size = 4,
+		size = 6,
 		reward = res(40, 20, 10, 5),
 	},
 	LaserBeam = {
@@ -58,7 +58,7 @@ local Enemies = {
 		moveSpeed = 16,
 		range = 30,
 		color = Color3.fromRGB(255, 50, 50),
-		size = 2,
+		size = 4,
 		reward = res(30, 15, 10, 5),
 	},
 	TheDermatologist = {
@@ -69,7 +69,7 @@ local Enemies = {
 		moveSpeed = 4,
 		range = 15,
 		color = Color3.fromRGB(255, 255, 255),
-		size = 8,
+		size = 12,
 		reward = res(0, 0, 0, 0), -- you win!
 	},
 }

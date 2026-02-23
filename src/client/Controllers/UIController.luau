@@ -140,6 +140,26 @@ function UIController.Init(inputController)
 		UIController.ShowGameOver(won)
 	end)
 
+	-- Reset UI on restart (server re-sends PlotAssigned, resources, etc.)
+	Remotes:WaitForChild("RestartGame").OnClientEvent:Connect(function()
+		-- Hide game over screen
+		if gameOverFrame then
+			gameOverFrame.Visible = false
+		end
+		-- Reset local state
+		currentAge = 1
+		currentResources = { Sebum = 0, Grease = 0, Bacteria = 0, Sweat = 0 }
+		currentIncome = { Sebum = 0, Grease = 0, Bacteria = 0, Sweat = 0 }
+		nuclearState = "none"
+		nuclearValue = 0
+		selectedBuildingId = nil
+		UIController.UpdateResourceBar()
+		UIController.UpdateAge(1, "Mild Irritation")
+		UIController.RefreshBuildMenu()
+		UIController.HideUnitPanel()
+		UIController.UpdateNuclearPanel()
+	end)
+
 	Remotes.BuildingDestroyed.OnClientEvent:Connect(function(buildingId)
 		if selectedBuildingId == buildingId then
 			UIController.HideUnitPanel()
@@ -712,6 +732,22 @@ function UIController.BuildGameOverScreen()
 	})
 	subtitleLabel.Name = "Subtitle"
 	subtitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+
+	-- Play Again button
+	local playAgainBtn = makeButton(gameOverFrame, {
+		text = "PLAY AGAIN",
+		size = UDim2.new(0, 250, 0, 50),
+		position = UDim2.new(0.5, 0, 0.55, 0),
+		color = Constants.UI_COLORS.Success,
+		textColor = Constants.UI_COLORS.Background,
+		textSize = 22,
+	})
+	playAgainBtn.Name = "PlayAgainBtn"
+	playAgainBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+	playAgainBtn.MouseButton1Click:Connect(function()
+		Remotes:WaitForChild("RestartGame"):FireServer()
+		gameOverFrame.Visible = false
+	end)
 end
 
 function UIController.ShowGameOver(won: boolean)

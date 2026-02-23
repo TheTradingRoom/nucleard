@@ -11,22 +11,46 @@ local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes"
 local CameraController = {}
 
 -- State
+local player = Players.LocalPlayer
 local plotOrigin = nil
 local plotSize = nil
 local currentZoom = Constants.CAMERA_DEFAULT_ZOOM
 local cameraTarget = Vector3.new(32, 0, 32) -- default center
 local keysDown = {}
 
+local function applyPlotData(origin, size)
+	plotOrigin = origin
+	plotSize = size
+	cameraTarget = Vector3.new(
+		origin.X + size / 2,
+		0,
+		origin.Z + size / 2
+	)
+	-- Plot data applied
+end
+
 function CameraController.Init()
-	-- Wait for plot assignment
+	-- Try reading plot data from player attributes first (no race condition)
+	local ox = player:GetAttribute("PlotOriginX")
+	local oz = player:GetAttribute("PlotOriginZ")
+	local sz = player:GetAttribute("PlotSize")
+	if ox and oz and sz then
+		applyPlotData(Vector3.new(ox, 0, oz), sz)
+	else
+		-- Not set yet — listen for attribute changes
+		player:GetAttributeChangedSignal("PlotOriginX"):Connect(function()
+			local ox2 = player:GetAttribute("PlotOriginX")
+			local oz2 = player:GetAttribute("PlotOriginZ")
+			local sz2 = player:GetAttribute("PlotSize")
+			if ox2 and oz2 and sz2 then
+				applyPlotData(Vector3.new(ox2, 0, oz2), sz2)
+			end
+		end)
+	end
+
+	-- Also listen for event (backup)
 	Remotes:WaitForChild("PlotAssigned").OnClientEvent:Connect(function(origin, size)
-		plotOrigin = origin
-		plotSize = size
-		cameraTarget = Vector3.new(
-			origin.X + size / 2,
-			0,
-			origin.Z + size / 2
-		)
+		applyPlotData(origin, size)
 	end)
 
 	-- Input handling

@@ -129,29 +129,12 @@ function WaveSystem.SpawnEnemy(player: Player, enemyDef, plotOrigin: Vector3)
 	part.Color = enemyDef.color
 	part.Material = Enum.Material.Neon
 
-	-- Label
-	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Size = UDim2.new(0, 80, 0, 20)
-	billboardGui.StudsOffset = Vector3.new(0, enemyDef.size / 2 + 1, 0)
-	billboardGui.AlwaysOnTop = true
-	billboardGui.Parent = part
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.fromRGB(255, 100, 100)
-	label.TextStrokeTransparency = 0.5
-	label.Font = Enum.Font.GothamBold
-	label.TextScaled = true
-	label.Text = enemyDef.name
-	label.Parent = billboardGui
-
-	-- Health bar
+	-- Health bar (enemies always show health — they're threats)
 	local healthBarGui = Instance.new("BillboardGui")
 	healthBarGui.Name = "HealthBar"
-	healthBarGui.Size = UDim2.new(0, 60, 0, 6)
-	healthBarGui.StudsOffset = Vector3.new(0, enemyDef.size / 2 + 1.8, 0)
-	healthBarGui.AlwaysOnTop = true
+	healthBarGui.Size = UDim2.new(0, 40, 0, 4)
+	healthBarGui.StudsOffset = Vector3.new(0, enemyDef.size / 2 + 0.3, 0)
+	healthBarGui.AlwaysOnTop = false
 	healthBarGui.Parent = part
 
 	local healthBg = Instance.new("Frame")
@@ -270,6 +253,19 @@ function WaveSystem.CombatTick()
 				local dist = (building.part.Position - enemyPos).Magnitude
 				if dist <= enemy.range then
 					enemy.lastAttackTime = now
+
+					-- Visual: enemy attack flash
+					local beam = Instance.new("Part")
+					beam.Size = Vector3.new(0.3, 0.3, dist)
+					beam.CFrame = CFrame.lookAt((enemyPos + building.part.Position) / 2, building.part.Position)
+					beam.Anchored = true
+					beam.CanCollide = false
+					beam.Color = Color3.fromRGB(255, 50, 50)
+					beam.Material = Enum.Material.Neon
+					beam.Transparency = 0.3
+					beam.Parent = workspace
+					task.delay(0.12, function() beam:Destroy() end)
+
 					local destroyed = BuildingSystem.DamageBuilding(enemy.targetBuildingId, enemy.damage)
 					if destroyed then
 						enemy.targetBuildingId = nil

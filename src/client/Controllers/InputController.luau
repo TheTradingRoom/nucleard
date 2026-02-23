@@ -18,29 +18,52 @@ local player = Players.LocalPlayer
 local plotOrigin = nil
 local plotSize = nil
 local buildMode = false
+local buildModeFrameCount = 0
 local selectedBuildingDef = nil
 local ghostPart = nil
 local selectedUnits = {} -- { [unitId] = Part }
 local lastGridX, lastGridZ = 0, 0
 
+-- Read plot data from player attributes (set by server, no race condition)
+local function readPlotFromAttributes()
+	local ox = player:GetAttribute("PlotOriginX")
+	local oz = player:GetAttribute("PlotOriginZ")
+	local sz = player:GetAttribute("PlotSize")
+	if ox and oz and sz then
+		plotOrigin = Vector3.new(ox, 0, oz)
+		plotSize = sz
+		return true
+	end
+	return false
+end
+
 function InputController.Init()
-	-- Wait for plot assignment
-	Remotes.PlotAssigned.OnClientEvent:Connect(function(origin, size)
+	-- Try reading plot data from attributes first (already set if server assigned before client loaded)
+	if not readPlotFromAttributes() then
+		-- Not set yet — listen for attribute changes
+		player:GetAttributeChangedSignal("PlotOriginX"):Connect(function()
+			readPlotFromAttributes()
+		end)
+	end
+
+	-- Also listen for the event (belt and suspenders)
+	Remotes:WaitForChild("PlotAssigned").OnClientEvent:Connect(function(origin, size)
 		plotOrigin = origin
 		plotSize = size
 	end)
 
 	-- Mouse click
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if gameProcessed then
-			return
-		end
-
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if gameProcessed then
+				return
+			end
 			InputController.OnLeftClick()
 		elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+			if gameProcessed then return end
 			InputController.OnRightClick()
 		elseif input.UserInputType == Enum.UserInputType.Keyboard then
+			if gameProcessed then return end
 			if input.KeyCode == Enum.KeyCode.Escape then
 				InputController.CancelBuildMode()
 				InputController.ClearSelection()
@@ -48,8 +71,12 @@ function InputController.Init()
 		end
 	end)
 
-	-- Update ghost position
+	-- Update ghost position every frame
 	RunService.RenderStepped:Connect(function()
+		if buildMode then
+			buildModeFrameCount = buildModeFrameCount + 1
+		end
+
 		if buildMode and ghostPart and plotOrigin then
 			InputController.UpdateGhost()
 		end
@@ -62,7 +89,7 @@ function InputController.GetMouseWorldPosition()
 	return CameraController.GetMouseWorldPosition()
 end
 
-function InputController.WorldToGrid(worldPos: Vector3): (number?, number?)
+function InputController.WorldToGrid(worldPos: Vector3)
 	if not plotOrigin then
 		return nil, nil
 	end
@@ -96,6 +123,7 @@ function InputController.EnterBuildMode(defId: string)
 	InputController.ClearSelection()
 
 	buildMode = true
+	buildModeFrameCount = 0
 	selectedBuildingDef = def
 
 	-- Create ghost
@@ -110,7 +138,11 @@ function InputController.EnterBuildMode(defId: string)
 	ghostPart.CanCollide = false
 	ghostPart.Color = def.color
 	ghostPart.Material = Enum.Material.SmoothPlastic
-	ghostPart.Transparency = 0.5
+	-- Start fully invisible — only show once mouse is over the grid
+	ghostPart.Transparency = 1
+
+	-- Park it underground so it's not visible at (0,0,0)
+	ghostPart.Position = Vector3.new(0, -100, 0)
 	ghostPart.Parent = workspace
 end
 
@@ -131,12 +163,17 @@ function InputController.UpdateGhost()
 
 	local gridX, gridZ = InputController.WorldToGrid(worldPos)
 	if not gridX or not gridZ then
-		ghostPart.Transparency = 0.8
+		-- Mouse is off the grid — hide ghost
+		ghostPart.Transparency = 1
+		ghostPart.Position = Vector3.new(0, -100, 0)
 		return
 	end
 
-	lastGridX = gridX
-	lastGridZ = gridZ
+	-- Track grid cell changes
+	if gridX ~= lastGridX or gridZ ~= lastGridZ then
+		lastGridX = gridX
+		lastGridZ = gridZ
+	end
 
 	-- Snap ghost to grid
 	local def = selectedBuildingDef
@@ -160,7 +197,10 @@ end
 
 function InputController.OnLeftClick()
 	if buildMode and selectedBuildingDef then
-		-- Place building
+		if buildModeFrameCount < 2 then
+			return
+		end
+
 		local worldPos = InputController.GetMouseWorldPosition()
 		if not worldPos then
 			return
@@ -171,9 +211,8 @@ function InputController.OnLeftClick()
 			return
 		end
 
-		Remotes.BuildRequest:FireServer(selectedBuildingDef.id, gridX, gridZ)
+		Remotes:WaitForChild("BuildRequest"):FireServer(selectedBuildingDef.id, gridX, gridZ)
 
-		-- Stay in build mode for rapid placement (shift)
 		if not UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
 			InputController.CancelBuildMode()
 		end
@@ -188,7 +227,6 @@ function InputController.OnLeftClick()
 		return
 	end
 
-	-- Check if clicking a unit
 	local isShift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
 	if target.Name:find("Unit_") then
 		if not isShift then
@@ -198,22 +236,18 @@ function InputController.OnLeftClick()
 		return
 	end
 
-	-- Check if clicking a building (for selection info)
 	if target.Name:find("Building_") then
 		InputController.ClearSelection()
-		-- Notify UIController locally
 		if InputController._onBuildingClicked then
 			InputController._onBuildingClicked(target)
 		end
 		return
 	end
 
-	-- Clicked on ground
 	InputController.ClearSelection()
 end
 
 function InputController.OnRightClick()
-	-- Right click = move selected units
 	if next(selectedUnits) then
 		local worldPos = InputController.GetMouseWorldPosition()
 		if not worldPos then
@@ -225,12 +259,11 @@ function InputController.OnRightClick()
 			table.insert(unitIds, unitId)
 		end
 
-		Remotes.MoveUnits:FireServer(unitIds, worldPos)
+		Remotes:WaitForChild("MoveUnits"):FireServer(unitIds, worldPos)
 	end
 end
 
 function InputController.SelectUnit(part: BasePart)
-	-- Extract unit ID from part name (format: Unit_DefId_uN)
 	local unitId = part.Name:match("Unit_%w+_(u%d+)")
 	if not unitId then
 		return
@@ -238,7 +271,6 @@ function InputController.SelectUnit(part: BasePart)
 
 	selectedUnits[unitId] = part
 
-	-- Show selection ring
 	local ring = part:FindFirstChild("SelectionRing")
 	if ring then
 		ring.Transparency = 0.3

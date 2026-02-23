@@ -113,29 +113,13 @@ function BuildingSystem.HandleBuildRequest(player: Player, buildingDefId: string
 	part.TopSurface = Enum.SurfaceType.Smooth
 	part.BottomSurface = Enum.SurfaceType.Smooth
 
-	-- Add label
-	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Size = UDim2.new(0, 100, 0, 30)
-	billboardGui.StudsOffset = Vector3.new(0, part.Size.Y / 2 + 1, 0)
-	billboardGui.AlwaysOnTop = true
-	billboardGui.Parent = part
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextStrokeTransparency = 0.5
-	label.Font = Enum.Font.GothamBold
-	label.TextScaled = true
-	label.Text = def.name
-	label.Parent = billboardGui
-
-	-- Add health bar
+	-- Health bar (hidden until damaged — reduces visual clutter)
 	local healthBarGui = Instance.new("BillboardGui")
 	healthBarGui.Name = "HealthBar"
-	healthBarGui.Size = UDim2.new(0, 80, 0, 8)
-	healthBarGui.StudsOffset = Vector3.new(0, part.Size.Y / 2 + 2.2, 0)
-	healthBarGui.AlwaysOnTop = true
+	healthBarGui.Size = UDim2.new(0, 60, 0, 6)
+	healthBarGui.StudsOffset = Vector3.new(0, part.Size.Y / 2 + 0.5, 0)
+	healthBarGui.AlwaysOnTop = false
+	healthBarGui.Enabled = false -- hidden until damaged
 	healthBarGui.Parent = part
 
 	local healthBg = Instance.new("Frame")
@@ -275,10 +259,11 @@ function BuildingSystem.DamageBuilding(buildingId: string, damage: number): bool
 	end
 
 	building.health -= damage
-	-- Update health bar
+	-- Update health bar (show it now that building is damaged)
 	if building.part then
 		local healthBar = building.part:FindFirstChild("HealthBar")
 		if healthBar then
+			healthBar.Enabled = true -- show on first damage
 			local bg = healthBar:FindFirstChildWhichIsA("Frame")
 			if bg then
 				local fill = bg:FindFirstChild("Fill")
@@ -328,8 +313,28 @@ function BuildingSystem.TurretTick()
 		end
 
 		local nearestEnemy, nearestDist = WaveSystem.FindNearestEnemy(building.owner, buildingPos, def.range)
-		if nearestEnemy then
+		if nearestEnemy and nearestEnemy.part then
 			building.lastAttackTime = now
+
+			-- Visual: turret beam to enemy
+			local enemyPos = nearestEnemy.part.Position
+			local midPoint = (buildingPos + enemyPos) / 2
+			local dist = (enemyPos - buildingPos).Magnitude
+
+			local beam = Instance.new("Part")
+			beam.Name = "TurretBeam"
+			beam.Size = Vector3.new(0.4, 0.4, dist)
+			beam.CFrame = CFrame.lookAt(midPoint, enemyPos)
+			beam.Anchored = true
+			beam.CanCollide = false
+			beam.Color = Color3.fromRGB(255, 100, 100)
+			beam.Material = Enum.Material.Neon
+			beam.Transparency = 0.2
+			beam.Parent = workspace
+			task.delay(0.15, function()
+				beam:Destroy()
+			end)
+
 			WaveSystem.DamageEnemy(nearestEnemy.id, def.damage, building.owner)
 		end
 	end
