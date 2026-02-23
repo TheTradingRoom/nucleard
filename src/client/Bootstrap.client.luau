@@ -6,9 +6,9 @@ local player = Players.LocalPlayer
 
 print("[Nuclear'd] Client starting for", player.Name)
 
-local CameraController = require(script.Controllers.CameraController)
-local InputController = require(script.Controllers.InputController)
-local UIController = require(script.Controllers.UIController)
+local CameraController = require(script.Parent.Controllers.CameraController)
+local InputController = require(script.Parent.Controllers.InputController)
+local UIController = require(script.Parent.Controllers.UIController)
 
 -- Initialize in order (camera first, then input, then UI)
 CameraController.Init()

@@ -3,7 +3,7 @@
 
 print("[Nuclear'd] Server starting...")
 
-local GameManager = require(script.Services.GameManager)
+local GameManager = require(script.Parent.Services.GameManager)
 GameManager.Init()
 
 print("[Nuclear'd] Server ready.")
