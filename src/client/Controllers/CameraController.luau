@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
 local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local CameraController = {}

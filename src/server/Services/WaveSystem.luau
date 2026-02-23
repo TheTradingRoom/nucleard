@@ -2,9 +2,9 @@
 -- Wave timer, enemy spawning, enemy AI, combat
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
-local WaveConfig = require(ReplicatedStorage.GameConfig.Waves)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
+local WaveConfig = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Waves"))
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local PlotService = require(script.Parent.PlotService)
 local ResourceSystem = require(script.Parent.ResourceSystem)

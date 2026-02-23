@@ -2,10 +2,10 @@
 -- Training queue, movement tick (10Hz), combat tick (2Hz), auto-attack
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
-local Units = require(ReplicatedStorage.GameConfig.Units)
-local Buildings = require(ReplicatedStorage.GameConfig.Buildings)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
+local Units = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Units"))
+local Buildings = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Buildings"))
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local ResourceSystem = require(script.Parent.ResourceSystem)
 local PlotService = require(script.Parent.PlotService)

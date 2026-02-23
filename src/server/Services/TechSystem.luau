@@ -2,8 +2,8 @@
 -- Age tracking, advancement validation, cost deduction
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local ResourceSystem = require(script.Parent.ResourceSystem)
 

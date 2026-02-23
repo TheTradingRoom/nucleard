@@ -2,9 +2,9 @@
 -- Grid placement validation, building state, health, Part creation, turret combat
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Constants = require(ReplicatedStorage.Constants)
-local Buildings = require(ReplicatedStorage.GameConfig.Buildings)
-local Remotes = ReplicatedStorage.Network.Remotes
+local Constants = require(ReplicatedStorage:WaitForChild("Constants"))
+local Buildings = require(ReplicatedStorage:WaitForChild("GameConfig"):WaitForChild("Buildings"))
+local Remotes = ReplicatedStorage:WaitForChild("Network"):WaitForChild("Remotes")
 
 local PlotService = require(script.Parent.PlotService)
 local ResourceSystem = require(script.Parent.ResourceSystem)
